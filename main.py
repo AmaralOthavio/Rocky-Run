@@ -319,7 +319,7 @@ def main(genomas, config):
                 plataformas.remove(r)
             ultimo_x = plataformas[-1].x if len(plataformas) > 0 else TELA_LARGURA
             novas_x = ultimo_x + random.randrange(200, 250)
-            plataformas.append(Plataforma(novas_x, random.randrange(520, 650), largura=random.randrange(80, 140)))
+            plataformas.append(Plataforma(novas_x, random.randrange(520, 640), largura=random.randrange(80, 140)))
 
         # mover chão (fundo em movimento)
         chao.mover()
