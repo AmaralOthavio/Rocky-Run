@@ -7,7 +7,6 @@ import neat.config
 import time
 
 aiJogando = True
-geracao = 0
 max_pontos = 0
 
 TELA_LARGURA = 500
@@ -31,6 +30,15 @@ FONTE_PONTOS = pygame.font.SysFont('times-new-roman', 36)
 # Inicializa o Pygame e constrói a tela inicial
 pygame.init()
 screen = pygame.display.set_mode((TELA_LARGURA, TELA_ALTURA))
+
+# Inicializando tudo sem nada
+game_state = "menu"  # Possíveis estados: "menu", "playing", "paused"
+cubos = []
+plataformas = []
+pontos = 0
+geracao = 0
+redes = []
+lista_genomas = []
 
 
 class Cubo:
@@ -142,7 +150,7 @@ class Fundo:
         tela.blit(IMAGEM_BACKGROUND, (self.x2, 0))
 
 
-def desenhar_tela(tela, cubos, plataformas, chao, fundo, pontos, tempo_inicio, pontos_max=0):
+def desenhar_tela(tela, cubos, plataformas, chao, fundo, pontos, tempo_inicio, pontos_max=0, events=None):
     fundo.desenhar(tela)
     for cubo in cubos:
         cubo.desenhar(tela)
@@ -163,8 +171,20 @@ def desenhar_tela(tela, cubos, plataformas, chao, fundo, pontos, tempo_inicio, p
         gen_text = FONTE_PONTOS.render(f"Geração: {geracao}", 1, (255, 255, 255))
         tela.blit(gen_text, (10, 10))
 
+    texto_voltar = FONTE_PONTOS.render("Voltar", 1, (222, 39, 39))
+    voltar_hitbox = texto_voltar.get_rect(topleft=(10, 80))
+    tela.blit(texto_voltar, (10, 80))
     chao.desenhar(tela)
     pygame.display.update()
+
+    if events is None:
+        return
+    for evento in events:
+        if evento.type == pygame.KEYDOWN and evento.key == pygame.K_r:
+            return_to_menu()
+        if evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 1:
+            if voltar_hitbox.collidepoint(evento.pos):
+                return_to_menu()
 
 
 def criar_plataformas_iniciais():
@@ -193,6 +213,8 @@ def posicionar_cubos_sobre_plataforma_inicial(cubos, plataformas):
 
 
 def start_game():
+    global game_state
+    game_state = "playing"
     rodar()
 
 
@@ -208,11 +230,15 @@ def alterar_jogador(value, resposta):
 
 def show_menu():
     global screen  # Declare screen as global
-    menu = pygame_menu.Menu('Menu principal', TELA_LARGURA, TELA_ALTURA, theme=pygame_menu.themes.THEME_BLUE)
-    menu.add.button('Jogar', start_game)
-    menu.add.button('Sair', exit_game)
+    menu = pygame_menu.Menu('Menu Principal', TELA_LARGURA, TELA_ALTURA, theme=pygame_menu.themes.THEME_DARK)
+    menu.add.button('Iniciar', start_game)
     # Add checkbox with the correct call
-    menu.add.selector('Ver IA jogando:', [('Sim', True), ('Não', False)], onchange=alterar_jogador)
+    if aiJogando:
+        opcoes = [('Sim', True), ('Não', False)]
+    else:
+        opcoes = [('Não', False), ('Sim', True)]
+    menu.add.selector('Ver IA jogando:', opcoes, onchange=alterar_jogador)
+    menu.add.button('Sair', exit_game)
 
     while True:
         events = pygame.event.get()  # Get all events
@@ -226,8 +252,20 @@ def show_menu():
         pygame.display.flip()
 
 
+def return_to_menu():
+    global game_state, cubos, plataformas, pontos, redes, lista_genomas, geracao  # Declare as needed
+    game_state = "menu"
+    cubos = []  # Clear cubes
+    plataformas = []  # Clear platforms
+    pontos = 0  # Reset points
+    geracao = 0
+    redes = []
+    lista_genomas = []
+    show_menu()
+
+
 def main(genomas, config):
-    global geracao
+    global geracao, game_state, cubos, plataformas, pontos, redes, lista_genomas
     geracao += 1
     if aiJogando:
         redes = []
@@ -261,8 +299,9 @@ def main(genomas, config):
     rodando = True
     while rodando:
         relogio.tick(30)
+        events = pygame.event.get()
 
-        for evento in pygame.event.get():
+        for evento in events:
             if evento.type == pygame.QUIT:
                 rodando = False
                 pygame.quit()
@@ -377,7 +416,7 @@ def main(genomas, config):
         global max_pontos
         if pontos > max_pontos:
             max_pontos = pontos
-        desenhar_tela(tela, cubos, plataformas, chao, fundo, pontos, tempo_inicio, pontos_max=max_pontos)
+        desenhar_tela(tela, cubos, plataformas, chao, fundo, pontos, tempo_inicio, pontos_max=max_pontos, events=events)
 
 
 def rodar():
