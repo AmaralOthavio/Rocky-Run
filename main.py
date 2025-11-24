@@ -5,6 +5,7 @@ import random
 import neat
 import neat.config
 import time
+from pathlib import Path
 
 aiJogando = True
 max_pontos = 0
@@ -25,7 +26,8 @@ CUBO_X = 100  # posição fixa X do jogador (será sobrescrito para centralizar 
 CAMINHO_CONFIG = os.path.join(os.path.dirname(__file__), "config.txt")
 
 pygame.font.init()
-FONTE_PONTOS = pygame.font.SysFont('times-new-roman', 36)
+FONTE_PONTOS = pygame.font.Font(os.path.join(str(os.path.dirname(Path(__file__).resolve()) + r"\fonts\FreeSans.ttf") ), size=32)
+# FONTE_WIDGETS = pygame_menu.font.FONT(os.path.join(os.path.dirname(__file__), r"\fonts\times.ttf"), size=14)
 
 # Inicializa o Pygame e constrói a tela inicial
 pygame.init()
@@ -230,7 +232,14 @@ def alterar_jogador(value, resposta):
 
 def show_menu():
     global screen  # Declare screen as global
-    menu = pygame_menu.Menu('Menu Principal', TELA_LARGURA, TELA_ALTURA, theme=pygame_menu.themes.THEME_DARK)
+
+    # Customizando tema padrão escuro
+    mytheme = pygame_menu.themes.THEME_DARK.copy()
+    fonte = pygame_menu.font.FONT_FIRACODE
+
+    mytheme.title_font = fonte
+
+    menu = pygame_menu.Menu('Rocky Run', TELA_LARGURA, TELA_ALTURA, theme=mytheme)
     menu.add.button('Iniciar', start_game)
     # Add checkbox with the correct call
     if aiJogando:
